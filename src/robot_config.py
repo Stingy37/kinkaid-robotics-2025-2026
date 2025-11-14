@@ -1,3 +1,6 @@
+"""
+This module defines the hardware objects used elsewhere in the code
+"""
 from vex import *
 
 # Brain should be defined by default
