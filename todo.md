@@ -9,3 +9,8 @@
 - controller displays temperature values
 - ~code in flywheel controls~
 - ~code in conveyor controls~
+- code in pneumatic controls
+- code in intake controls(custom speeds)
+- autonomous left side
+- autonomous right side
+- Add a veracross photo of Andy Shi to Readme file
