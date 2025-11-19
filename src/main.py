@@ -24,9 +24,9 @@ controller_1 = Controller(PRIMARY)
 gyro = Inertial(Ports.PORT10)
 
 # Drivetrain
-left_dt_one = Motor(Ports.PORT19, GearSetting.RATIO_6_1)
-left_dt_two = Motor(Ports.PORT20, GearSetting.RATIO_6_1)
-left_dt_motorgroup = MotorGroup(left_dt_one, left_dt_two)
+leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_6_1)
+leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_6_1)
+left_dt_motorgroup = MotorGroup(leftDtOne, leftDtTwo)
 
 right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_6_1)
 right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_6_1)
