@@ -54,13 +54,29 @@ def driver_control():
     # called every 5 millisecs to not fry CPU but keep robot responsive to users inputs 
     #   - while loop listens to users input
     while True:
-        if abs(controller_1.axis1.position() >= 5): # anti controller drift code that
+        if abs(controller_1.axis1.position() >= 5): # deadzone
             left_drive_velocity = 600.0 * ((0.7 * (float(controller_1.axis1.position())) - float(controller_1.axis3.position())) / 100.0)
             left_dt_motorgroup.set_velocity(left_drive_velocity, units = RPM)
             right_drive_velocity = 600.0 * ((float(controller_1.axis1.position()) + float(controller_1.axis3.position())) / 100.0)
             right_dt_motorgroup.set_velocity(right_drive_velocity, units = RPM)
         else:
             dt.stop()
+        if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
+            flywheel.set_velocity(600)
+            conveyor.spin(REVERSE)
+            flywheel.spin(FORWARD)
+        elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
+            conveyor.spin(REVERSE)
+            flywheel.stop()
+        elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
+            flywheel.set_velocity(600)
+            conveyor.spin(FORWARD)
+            flywheel.spin(FORWARD)
+        else:
+            flywheel.set_velocity(600)
+            conveyor.set_velocity(600)
+            conveyor.stop()
+            flywheel.stop()
 
 
 def autonomous():
