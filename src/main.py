@@ -9,13 +9,19 @@ from random import randint
 from vex import *
 
 
-####################################################### HARDWARE DEFINITIONS (NOTE -> VEX DOESN'T IMPORT MULTIPLE MODULES) #######################################################
+''' 
+HARDWARE DEFINITIONS 
+drivetrain using smartdrive instead simple drivetrain
+
+
+
+'''
 
 
 # Core controls 
 brain=Brain()
 controller_1 = Controller(PRIMARY)
-gyro = Inertial(Ports.PORT10) # NOTE -> replace with actual port once gyro is implemented 
+gyro = Inertial(Ports.PORT10)
 
 # Drivetrain
 left_dt_one = Motor(Ports.PORT19, GearSetting.RATIO_6_1)
@@ -26,15 +32,14 @@ right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_6_1)
 right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_6_1)
 right_dt_motorgroup = MotorGroup(right_dt_one, right_dt_two)
 
-dt = DriveTrain(left_dt_motorgroup, right_dt_motorgroup, 319.19, 295, 40, MM)
+dt = SmartDrive(left_dt_motorgroup, right_dt_motorgroup, gyro, wheelTravel = 260, units = DistanceUnits.MM)
 
 # Motors
 left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 right_intake = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 intake_motorgroup = MotorGroup(left_intake, right_intake)
 
-flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False) # NOTE -> placeholder, wait for lucas to tell me what port actually 
-                                                             # has the flywheel, OR maybe its a group OF motors
+flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
 conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
 
 
@@ -49,7 +54,13 @@ def driver_control():
     # called every 5 millisecs to not fry CPU but keep robot responsive to users inputs 
     #   - while loop listens to users input
     while True:
-        pass
+        if abs(controller_1.axis1.position() >= 5): # anti controller drift code that
+            left_drive_velocity = 600.0 * ((0.7 * (float(controller_1.axis1.position())) - float(controller_1.axis3.position())) / 100.0)
+            left_dt_motorgroup.set_velocity(left_drive_velocity, units = RPM)
+            right_drive_velocity = 600.0 * ((float(controller_1.axis1.position()) + float(controller_1.axis3.position())) / 100.0)
+            right_dt_motorgroup.set_velocity(right_drive_velocity, units = RPM)
+        else:
+            dt.stop()
 
 
 def autonomous():
