@@ -37,7 +37,7 @@ dt = SmartDrive(left_dt_motorgroup, right_dt_motorgroup, gyro, wheelTravel = 260
 # Motors
 left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 right_intake = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
-intake_motorgroup = MotorGroup(left_intake, right_intake)
+intake = MotorGroup(left_intake, right_intake)
 
 flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
 conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
@@ -51,36 +51,50 @@ def driver_control():
     """
     Code that runs when the user is controlling the robot 
     """
-    # called every 5 millisecs to not fry CPU but keep robot responsive to users inputs 
-    #   - while loop listens to users input
-    while True:
-        if abs(controller_1.axis1.position() >= 5): # deadzone
-            left_drive_velocity = 600.0 * ((0.7 * (float(controller_1.axis1.position())) - float(controller_1.axis3.position())) / 100.0)
-            left_dt_motorgroup.set_velocity(left_drive_velocity, units = RPM)
-            right_drive_velocity = 600.0 * ((float(controller_1.axis1.position()) + float(controller_1.axis3.position())) / 100.0)
-            right_dt_motorgroup.set_velocity(right_drive_velocity, units = RPM)
-        else:
-            dt.stop()
-        if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
-            flywheel.set_velocity(600)
-            conveyor.spin(REVERSE)
-            flywheel.spin(FORWARD)
-        elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
-            conveyor.spin(REVERSE)
-            flywheel.stop()
-        elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
-            flywheel.set_velocity(600)
-            conveyor.spin(FORWARD)
-            flywheel.spin(FORWARD)
-        else:
-            flywheel.set_velocity(600)
-            conveyor.set_velocity(600)
-            conveyor.stop()
-            flywheel.stop()
+    #called every 5 millisecs to not fry CPU but keep robot responsive to users inputs 
+    #  - while loop listens to users input
+    # while True:
+    #     # drivetrain
+    #     if abs(controller_1.axis1.position() >= 5): # deadzone
+    #         left_drive_velocity = 600.0 * ((0.7 * (float(controller_1.axis1.position())) - float(controller_1.axis3.position())) / 100.0)
+    #         left_dt_motorgroup.set_velocity(left_drive_velocity, units = RPM)
+    #         right_drive_velocity = 600.0 * ((float(controller_1.axis1.position()) + float(controller_1.axis3.position())) / 100.0)
+    #         right_dt_motorgroup.set_velocity(right_drive_velocity, units = RPM)
+    #         left_dt_motorgroup.spin(FORWARD)
+    #         right_dt_motorgroup.spin(FORWARD)
+    #     else:
+    #         dt.stop()
+
+    #     # flywheel and conveyor belt
+    #     if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
+    #         flywheel.set_velocity(600)
+    #         conveyor.spin(REVERSE)
+    #         flywheel.spin(FORWARD)
+    #     elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
+    #         conveyor.spin(REVERSE)
+    #         flywheel.stop()
+    #     elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
+    #         flywheel.set_velocity(600)
+    #         conveyor.spin(FORWARD)
+    #         flywheel.spin(FORWARD)
+    #     else:
+    #         flywheel.set_velocity(600)
+    #         conveyor.set_velocity(600)
+    #         conveyor.stop()
+    #         flywheel.stop()
+
+    #     # intake
+    #     if controller_1.buttonL2.pressing():
+    #         intake.spin(REVERSE, velocity = 600, units = RPM)
+    #     elif controller_1.buttonL1.pressing():
+    #         intake.spin(FORWARD, velocity = 600, units = RPM)
+    #     else:
+    #         intake.stop()
+        
 
 
 def autonomous():
-    """
+    """onm
     Code that runs when the robot is in auton mode
     """
     # --- initial calibration
@@ -90,17 +104,14 @@ def autonomous():
 
 
     # ---- move robot 
-    intake_motorgroup.set_velocity(25, PERCENT)
-    intake_motorgroup.spin(FORWARD)
-    time.sleep(.25)
-
-    intake_motorgroup.set_velocity(100, PERCENT)
-    intake_motorgroup.spin(REVERSE)
+    intake.set_velocity(100, PERCENT)
+    intake.spin(FORWARD)
 
     # ---- pick up items
-    flywheel.set_velocity(50, PERCENT)
-    conveyor.spin(REVERSE)
-    flywheel.spin(FORWARD)
+    conveyor.spin(FORWARD)
+    
+    #
+    dt.drive_for(FORWARD, 1000)
 
 # delegates robot behavior during competition
 competition = Competition(autonomous, driver_control)
@@ -121,20 +132,53 @@ def main():
     # timer for stuff on the UI
     timer = Timer()   
 
+
     while True:
-        if timer.time(SECONDS) >= 2:
-            brain.screen.clear_screen()
-            timer.clear()      # reset the timer back to 0
+        # drivetrain
+        if abs(controller_1.axis3.position()) >= 5 or abs(controller_1.axis1.position()) >= 5: # deadzone
+            left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + float(controller_1.axis1.position())))
+            right_drive_velocity = ((float(controller_1.axis3.position()) - float(controller_1.axis1.position())))
 
-        x = randint(0, 480 - 1)
-        y = randint(0, 240 - 1)
-        brain.screen.print_at("you suck andy", x=x, y=y)
+            if left_drive_velocity > 0:
+                left_dt_motorgroup.set_velocity(abs(left_drive_velocity), units = PERCENT)
+                left_dt_motorgroup.spin(FORWARD)
+            else:                
+                left_dt_motorgroup.set_velocity(abs(left_drive_velocity), units = PERCENT)
+                left_dt_motorgroup.spin(REVERSE)
+            if right_drive_velocity > 0:
+                right_dt_motorgroup.set_velocity(abs(right_drive_velocity), units = PERCENT)
+                right_dt_motorgroup.spin(REVERSE)
+            else:                
+                right_dt_motorgroup.set_velocity(abs(right_drive_velocity), units = PERCENT)
+                right_dt_motorgroup.spin(FORWARD)
+        else:
+            dt.stop()
 
-        # update the screen every 40 seconds
-        wait(40, MSEC)
+        # flywheel and conveyor belt
+        if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
+            flywheel.set_velocity(600)
+            conveyor.spin(FORWARD)
+            flywheel.spin(FORWARD)
+        elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
+            conveyor.spin(FORWARD)
+            flywheel.stop()
+        elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
+            flywheel.set_velocity(600)
+            conveyor.spin(REVERSE)
+            flywheel.spin(FORWARD)
+        else:
+            flywheel.set_velocity(600)
+            conveyor.set_velocity(600)
+            conveyor.stop()
+            flywheel.stop()
 
-        # a new change
-
+        # intake
+        if controller_1.buttonL2.pressing():
+            intake.spin(REVERSE, velocity = 600, units = RPM)
+        elif controller_1.buttonL1.pressing():
+            intake.spin(FORWARD, velocity = 600, units = RPM)
+        else:
+            intake.stop()
 
 
 main()
