@@ -51,46 +51,18 @@ def driver_control():
     """
     Code that runs when the user is controlling the robot 
     """
-    #called every 5 millisecs to not fry CPU but keep robot responsive to users inputs 
-    #  - while loop listens to users input
-    # while True:
-    #     # drivetrain
-    #     if abs(controller_1.axis1.position() >= 5): # deadzone
-    #         left_drive_velocity = 600.0 * ((0.7 * (float(controller_1.axis1.position())) - float(controller_1.axis3.position())) / 100.0)
-    #         left_dt_motorgroup.set_velocity(left_drive_velocity, units = RPM)
-    #         right_drive_velocity = 600.0 * ((float(controller_1.axis1.position()) + float(controller_1.axis3.position())) / 100.0)
-    #         right_dt_motorgroup.set_velocity(right_drive_velocity, units = RPM)
-    #         left_dt_motorgroup.spin(FORWARD)
-    #         right_dt_motorgroup.spin(FORWARD)
-    #     else:
-    #         dt.stop()
-
-    #     # flywheel and conveyor belt
-    #     if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
-    #         flywheel.set_velocity(600)
-    #         conveyor.spin(REVERSE)
-    #         flywheel.spin(FORWARD)
-    #     elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
-    #         conveyor.spin(REVERSE)
-    #         flywheel.stop()
-    #     elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
-    #         flywheel.set_velocity(600)
-    #         conveyor.spin(FORWARD)
-    #         flywheel.spin(FORWARD)
-    #     else:
-    #         flywheel.set_velocity(600)
-    #         conveyor.set_velocity(600)
-    #         conveyor.stop()
-    #         flywheel.stop()
-
-    #     # intake
-    #     if controller_1.buttonL2.pressing():
-    #         intake.spin(REVERSE, velocity = 600, units = RPM)
-    #     elif controller_1.buttonL1.pressing():
-    #         intake.spin(FORWARD, velocity = 600, units = RPM)
-    #     else:
-    #         intake.stop()
+    while True:
+        #print temps
+        controller_1.screen.clear_screen()
+        controller_1.screen.set_cursor(1, 1)
+        controller_1.screen.print("Left: " + str(leftDtOne.temperature) + " " + str(leftDtTwo.temperature) + " " + "Right: " + str(right_dt_one.temperature) + " " + str(right_dt_two.temperature))
         
+        #print rpms
+        controller_1.screen.set_cursor(2, 1)
+        controller_1.screen.print("Intake: " + str(intake.velocity()) + " " + "Flywheel: " + str(flywheel.velocity()))
+        
+        #drivetrain rpms
+        controller_1.screen.print("Left: " + str(leftDtOne.velocity) + " " + str(leftDtTwo.velocity) + " " + "Right: " + str(right_dt_one.velocity) + " " + str(right_dt_two.velocity))
 
 
 def autonomous():
@@ -179,6 +151,5 @@ def main():
             intake.spin(FORWARD, velocity = 600, units = RPM)
         else:
             intake.stop()
-
 
 main()
