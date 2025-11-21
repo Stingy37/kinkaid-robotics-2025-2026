@@ -89,7 +89,7 @@ def autonomous():
     dt.drive_for(FORWARD, 1000)
 
 # delegates robot behavior during competition
-competition = Competition(autonomous, driver_control)
+competition = Competition(driver_control, autonomous)
 
 def main():
     """
