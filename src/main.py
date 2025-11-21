@@ -54,59 +54,6 @@ def driver_control():
     """
     Code that runs when the user is controlling the robot 
     """
-    while True:
-        #print temps
-        controller_1.screen.clear_screen()
-        controller_1.screen.set_cursor(1, 1)
-        controller_1.screen.print("Left: " + str(leftDtOne.temperature) + " " + str(leftDtTwo.temperature) + " " + "Right: " + str(right_dt_one.temperature) + " " + str(right_dt_two.temperature))
-        
-        #print rpms
-        controller_1.screen.set_cursor(2, 1)
-        controller_1.screen.print("Intake: " + str(intake.velocity()) + " " + "Flywheel: " + str(flywheel.velocity()))
-        
-        #drivetrain rpms
-        controller_1.screen.print("Left: " + str(leftDtOne.velocity) + " " + str(leftDtTwo.velocity) + " " + "Right: " + str(right_dt_one.velocity) + " " + str(right_dt_two.velocity))
-
-
-def autonomous():
-    """onm
-    Code that runs when the robot is in auton mode
-    """
-    # --- initial calibration
-    gyro.calibrate() 
-    dt.set_drive_velocity(50, PERCENT)
-    dt.set_turn_velocity(50, PERCENT)
-
-
-    # ---- move robot 
-    intake.set_velocity(100, PERCENT)
-    intake.spin(FORWARD)
-
-    # ---- pick up items
-    conveyor.spin(FORWARD)
-    
-    #
-    dt.drive_for(FORWARD, 1000)
-
-# delegates robot behavior during competition
-competition = Competition(driver_control, autonomous)
-
-def main():
-    """
-    sets up and updates the UI
-    """
-    brain.screen.clear_screen()
-
-    # set the text color 
-    brain.screen.set_pen_color(Color.WHITE)
-
-    # top right of the screen (where rows and columns are 1-index, NOT zero-indexed!)
-    brain.screen.set_cursor(1, 1)
-    brain.screen.print("you suck lucas") # print it once for lucas to see 
-
-    # timer for stuff on the UI
-    timer = Timer()   
-
 
     while True:
         # drivetrain
@@ -165,4 +112,59 @@ def main():
             descore.set(True)
         elif controller_1.buttonY.pressing():
             descore.set(False)
+
+def autonomous():
+    """onm
+    Code that runs when the robot is in auton mode
+    """
+    # --- initial calibration
+    gyro.calibrate() 
+    dt.set_drive_velocity(50, PERCENT)
+    dt.set_turn_velocity(50, PERCENT)
+
+
+    # ---- move robot 
+    intake.set_velocity(100, PERCENT)
+    intake.spin(FORWARD)
+
+    # ---- pick up items
+    conveyor.spin(FORWARD)
+    
+    #
+    dt.drive_for(FORWARD, 1000)
+
+# delegates robot behavior during competition
+competition = Competition(driver_control, autonomous)
+
+def main():
+    """
+    sets up and updates the UI
+    """
+    brain.screen.clear_screen()
+
+    # set the text color 
+    brain.screen.set_pen_color(Color.WHITE)
+
+    # top right of the screen (where rows and columns are 1-index, NOT zero-indexed!)
+    brain.screen.set_cursor(1, 1)
+    brain.screen.print("andy needs to read documentation") # print it once for lucas to see 
+
+    # timer for stuff on the UI
+    timer = Timer()   
+
+    
+    while True:
+        #print temps
+        controller_1.screen.clear_screen()
+        controller_1.screen.set_cursor(1, 1)
+        controller_1.screen.print("L: " + str(leftDtOne.temperature()) + " " + str(leftDtTwo.temperature()) + " " + "R: " + str(right_dt_one.temperature()) + " " + str(right_dt_two.temperature()))
+        
+        #print rpms
+        controller_1.screen.set_cursor(2, 1)
+        controller_1.screen.print("I: " + str(int(intake.velocity())) + " " + "F: " + str(int(flywheel.velocity())) +" " + "C: " + str(int(conveyor.velocity())))
+        
+        #drivetrain rpms
+        controller_1.screen.set_cursor(3, 1)
+        controller_1.screen.print("L: " + str(int(leftDtOne.velocity())) + " " + str(int(leftDtTwo.velocity())) + " " + "R: " + str(int(right_dt_one.velocity())) + " " + str(int(right_dt_two.velocity())))
+        wait(500)
 main()
