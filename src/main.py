@@ -42,6 +42,9 @@ intake = MotorGroup(left_intake, right_intake)
 flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
 conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
 
+# Pnuematics
+tube_dispenser = DigitalOut(brain.three_wire_port.a)
+descore = DigitalOut(brain.three_wire_port.b)
 
 
 ##################################################################### END HARDWARE DEFINITIONS #######################################################
@@ -151,5 +154,15 @@ def main():
             intake.spin(FORWARD, velocity = 600, units = RPM)
         else:
             intake.stop()
-
+        
+        # pneumatics
+        if controller_1.buttonUp.pressing():
+            tube_dispenser.set(True)
+        elif controller_1.buttonDown.pressing():
+            tube_dispenser.set(False)
+        
+        if controller_1.buttonX.pressing():
+            descore.set(True)
+        elif controller_1.buttonY.pressing():
+            descore.set(False)
 main()
