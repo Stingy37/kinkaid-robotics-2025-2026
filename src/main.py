@@ -26,13 +26,13 @@ gyro = Inertial(Ports.PORT10)
 # Drivetrain
 leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_6_1)
 leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_6_1)
-left_dt_motorgroup = MotorGroup(leftDtOne, leftDtTwo)
+left_dt = MotorGroup(leftDtOne, leftDtTwo)
 
 right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_6_1)
 right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_6_1)
-right_dt_motorgroup = MotorGroup(right_dt_one, right_dt_two)
+right_dt = MotorGroup(right_dt_one, right_dt_two)
 
-dt = SmartDrive(left_dt_motorgroup, right_dt_motorgroup, gyro, wheelTravel = 260, units = DistanceUnits.MM)
+dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
 
 # Motors
 left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
@@ -46,10 +46,89 @@ conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)
 tube_dispenser = DigitalOut(brain.three_wire_port.a)
 descore = DigitalOut(brain.three_wire_port.b)
 
+# Global Variables
+auton_side = "L"
+integral = 0
+derivative = 0
+
 
 ##################################################################### END HARDWARE DEFINITIONS #######################################################
 
+def PID_drive(distance, heading, velocity, kP, kI, kD):
+    left_dt.set_position(0)
+    right_dt.set_position(0)
+    previousError = 0
+    error = 0
+    output = 0
+    dt = 1
+    if velocity >= 0:
+        while left_dt.position < distance:
+            # set error
+            error = heading - gyro.rotation()
 
+            # update integral
+            integral += error
+
+            if integral >= 50:
+                integral = 50
+            elif integral <= -50:
+                integral = -50
+
+            # update derivative
+            derivative = error - previousError
+
+            if derivative >= 50:
+                derivative = 50
+            elif derivative <= -50:
+                derivative = -50
+
+            #set velocities
+            output = (kP * error) + (kI * integral) + (kD * derivative)
+            left_dt.set_velocity(velocity + output)
+            right_dt.set_velocity(velocity - output)
+            left_dt.spin(FORWARD)
+            right_dt.spin(FORWARD)
+
+            previousError = error
+            dt += 1
+            wait(20)
+    else:
+        while left_dt.position > distance:
+            # set error
+            error = heading - gyro.rotation()
+
+            # update integral
+            integral += error
+
+            if integral >= 50:
+                integral = 50
+            elif integral <= -50:
+                integral = -50
+
+            # update derivative
+            derivative = error - previousError
+
+            if derivative >= 50:
+                derivative = 50
+            elif derivative <= -50:
+                derivative = -50
+
+            #set velocities
+            output = (kP * error) + (kI * integral) + (kD * derivative)
+            left_dt.set_velocity(velocity + output)
+            right_dt.set_velocity(velocity - output)
+            left_dt.spin(FORWARD)
+            right_dt.spin(FORWARD)
+
+            previousError = error
+            dt += 1
+            wait(20)
+    #
+    left_dt.stop()
+    right_dt.stop()
+
+
+    
 def driver_control():
     """
     Code that runs when the user is controlling the robot 
@@ -62,17 +141,17 @@ def driver_control():
             right_drive_velocity = ((float(controller_1.axis3.position()) - float(controller_1.axis1.position())))
 
             if left_drive_velocity > 0:
-                left_dt_motorgroup.set_velocity(abs(left_drive_velocity), units = PERCENT)
-                left_dt_motorgroup.spin(FORWARD)
+                left_dt.set_velocity(abs(left_drive_velocity), units = PERCENT)
+                left_dt.spin(FORWARD)
             else:                
-                left_dt_motorgroup.set_velocity(abs(left_drive_velocity), units = PERCENT)
-                left_dt_motorgroup.spin(REVERSE)
+                left_dt.set_velocity(abs(left_drive_velocity), units = PERCENT)
+                left_dt.spin(REVERSE)
             if right_drive_velocity > 0:
-                right_dt_motorgroup.set_velocity(abs(right_drive_velocity), units = PERCENT)
-                right_dt_motorgroup.spin(REVERSE)
+                right_dt.set_velocity(abs(right_drive_velocity), units = PERCENT)
+                right_dt.spin(REVERSE)
             else:                
-                right_dt_motorgroup.set_velocity(abs(right_drive_velocity), units = PERCENT)
-                right_dt_motorgroup.spin(FORWARD)
+                right_dt.set_velocity(abs(right_drive_velocity), units = PERCENT)
+                right_dt.spin(FORWARD)
         else:
             dt.stop()
 
