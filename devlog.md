@@ -1,5 +1,15 @@
 # Development Log
 
+## [Thanksgiving Break - 2025-12-1]
+
+### Summary
+Added PID Loop and bug fixed imported code
+
+### Completed
+LJ - 
+- ported over old block based code to text equivalent
+- fixed issues with inversed motor direction
+
 ## [2025-11-18]
 ### Summary
 Converted block code into text equivalents
