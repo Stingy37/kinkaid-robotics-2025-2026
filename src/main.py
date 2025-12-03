@@ -58,8 +58,8 @@ isDriving = False
 
 def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
     global start_integral, start_derivative
-    left_dt.set_position(0)
-    right_dt.set_position(0)
+    left_dt.set_position(0, DEGREES)
+    right_dt.set_position(0, DEGREES)
 
     integral = start_integral
     derivative = start_derivative
@@ -87,12 +87,10 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
             right_dt.spin(FORWARD)
 
             previousError = error
-            wait(20, MSEC)
+            wait(100, MSEC)
 
-        left_dt.stop()
-        right_dt.stop()
     else:
-        while left_dt.position() > distance_degrees:
+        while left_dt.position(DEGREES) > distance_degrees:
             # set error
             error = heading - gyro.rotation()
 
@@ -107,17 +105,14 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
             #set velocities
             output = (kP * error) + (kI * integral) + (kD * derivative)
 
-            left_dt.set_velocity(velocity + output)
-            right_dt.set_velocity(velocity - output)
-            left_dt.spin(REVERSE)
-            right_dt.spin(REVERSE)
+            left_dt.set_velocity((velocity + output), units = PERCENT)
+            right_dt.set_velocity((velocity - output), units = PERCENT)
+            left_dt.spin(FORWARD)
+            right_dt.spin(FORWARD)
 
             previousError = error
 
             wait(20, MSEC)
-
-        left_dt.stop()
-        right_dt.stop()
 
     #
     left_dt.stop()
@@ -133,8 +128,8 @@ def driver_control():
     while isDriving:
         # drivetrain
         if abs(controller_1.axis3.position()) >= 5 or abs(controller_1.axis1.position()) >= 5: # deadzone
-            left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + float(controller_1.axis1.position())))
-            right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - float(controller_1.axis1.position())))
+            left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + (0.5 * float(controller_1.axis1.position()))))
+            right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - (0.5 * float(controller_1.axis1.position()))))
 
             if left_drive_velocity > 0:
                 left_dt.set_velocity(abs(left_drive_velocity), units = PERCENT)
@@ -190,40 +185,63 @@ def driver_control():
     isDriving = False
 
 def autonomous():
-    """onm
-    Code that runs when the robot is in auton mode
-    """
-    # isDriving = False
-    # # --- initial calibration
-    # gyro.calibrate() 
-    # dt.set_drive_velocity(50, PERCENT)
-    # dt.set_turn_velocity(50, PERCENT)
-
-
-    # # ---- move robot 
-    # intake.set_velocity(100, PERCENT)
-    # intake.spin(REVERSE)
-
-    # # ---- pick up items
-    # conveyor.set_velocity(100)
-    # conveyor.spin(FORWARD)
-    
-    # #
-    # PID_drive(300, 0, 30, 1, 0.1, 0.01)
-    # #dt.drive(FORWARD)
-
     """
     ported code
+
     """
-    dt.set_drive_velocity(50, PERCENT)
-    dt.set_turn_velocity(50, PERCENT)
+    dt.set_drive_velocity(25, PERCENT)
+    dt.set_turn_velocity(5, PERCENT)
+    dt.set_stopping(BRAKE)
     intake.set_velocity(100, PERCENT)
     intake.spin(REVERSE)
+    conveyor.set_velocity(100, PERCENT)
     conveyor.spin(FORWARD)
+    flywheel.set_velocity(100, PERCENT)
 
-    dt.drive_for(FORWARD, 1300, MM)
+    #dt.drive_for(FORWARD, 1300, MM)
+    #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
+
+    dt.turn_to_rotation(-6)
+    wait(20, MSEC)
+    dt.drive_for(FORWARD, 1200, MM)
+
     wait(2, SECONDS)
+
     dt.drive_for(REVERSE, 600, MM)
+    wait(250, MSEC)
+    
+    dt.set_turn_velocity(5, PERCENT)
+    dt.turn_to_rotation(90, DEGREES)
+
+    wait(150, MSEC)
+
+    dt.set_turn_velocity(5, PERCENT)
+    dt.turn_to_rotation(90, DEGREES)
+    wait(250, MSEC)
+
+    dt.drive_for(REVERSE, 800, MM)
+
+    dt.set_turn_velocity(5, PERCENT)
+    dt.turn_to_rotation(180, DEGREES)
+
+    wait(150, MSEC)
+
+    dt.set_turn_velocity(5, PERCENT)
+    dt.turn_to_rotation(180, DEGREES)
+
+    wait(150, MSEC)
+
+    dt.drive_for(REVERSE, 250, MM)
+    dt.drive(REVERSE)
+    wait(500, MSEC)
+    flywheel.spin(FORWARD)
+    
+    wait(2, SECONDS)
+
+    flywheel.stop()
+    dt.stop()
+    
+    #dt.drive_for(REVERSE, 600, MM)
 
 
 # delegates robot behavior during competitiondti
