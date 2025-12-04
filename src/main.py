@@ -189,57 +189,113 @@ def autonomous():
     ported code
 
     """
-    dt.set_drive_velocity(25, PERCENT)
-    dt.set_turn_velocity(5, PERCENT)
-    dt.set_stopping(BRAKE)
-    intake.set_velocity(100, PERCENT)
-    intake.spin(REVERSE)
-    conveyor.set_velocity(100, PERCENT)
-    conveyor.spin(FORWARD)
-    flywheel.set_velocity(100, PERCENT)
+    if auton_side == "left":
+        dt.set_drive_velocity(25, PERCENT)
+        dt.set_turn_velocity(5, PERCENT)
+        dt.set_stopping(BRAKE)
+        intake.set_velocity(100, PERCENT)
+        intake.spin(REVERSE)
+        conveyor.set_velocity(100, PERCENT)
+        conveyor.spin(FORWARD)
+        flywheel.set_velocity(100, PERCENT)
 
-    #dt.drive_for(FORWARD, 1300, MM)
-    #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
+        #dt.drive_for(FORWARD, 1300, MM)
+        #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
 
-    dt.turn_to_rotation(-6)
-    wait(20, MSEC)
-    dt.drive_for(FORWARD, 1200, MM)
+        dt.turn_to_rotation(-6)
+        wait(20, MSEC)
+        dt.drive_for(FORWARD, 1200, MM)
 
-    wait(2, SECONDS)
+        wait(2, SECONDS)
 
-    dt.drive_for(REVERSE, 600, MM)
-    wait(250, MSEC)
-    
-    dt.set_turn_velocity(5, PERCENT)
-    dt.turn_to_rotation(90, DEGREES)
+        dt.drive_for(REVERSE, 600, MM)
+        wait(250, MSEC)
+        
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(90, DEGREES)
 
-    wait(150, MSEC)
+        wait(150, MSEC)
 
-    dt.set_turn_velocity(5, PERCENT)
-    dt.turn_to_rotation(90, DEGREES)
-    wait(250, MSEC)
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(90, DEGREES)
+        wait(250, MSEC)
 
-    dt.drive_for(REVERSE, 800, MM)
+        dt.drive_for(REVERSE, 800, MM)
 
-    dt.set_turn_velocity(5, PERCENT)
-    dt.turn_to_rotation(180, DEGREES)
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(180, DEGREES)
 
-    wait(150, MSEC)
+        wait(150, MSEC)
 
-    dt.set_turn_velocity(5, PERCENT)
-    dt.turn_to_rotation(180, DEGREES)
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(180, DEGREES)
 
-    wait(150, MSEC)
+        wait(150, MSEC)
 
-    dt.drive_for(REVERSE, 250, MM)
-    dt.drive(REVERSE)
-    wait(500, MSEC)
-    flywheel.spin(FORWARD)
-    
-    wait(2, SECONDS)
+        dt.drive_for(REVERSE, 250, MM)
+        dt.drive(REVERSE)
+        wait(500, MSEC)
+        flywheel.spin(FORWARD)
+        
+        wait(2, SECONDS)
 
-    flywheel.stop()
-    dt.stop()
+        flywheel.stop()
+        dt.stop()
+
+
+
+    elif auton_side == "right":
+        dt.set_drive_velocity(25, PERCENT)
+        dt.set_turn_velocity(5, PERCENT)
+        dt.set_stopping(BRAKE)
+        intake.set_velocity(100, PERCENT)
+        intake.spin(REVERSE)
+        conveyor.set_velocity(100, PERCENT)
+        conveyor.spin(FORWARD)
+        flywheel.set_velocity(100, PERCENT)
+
+        #dt.drive_for(FORWARD, 1300, MM)
+        #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
+
+        dt.turn_to_rotation(6)
+        wait(20, MSEC)
+        dt.drive_for(FORWARD, 1200, MM)
+
+        wait(2, SECONDS)
+
+        dt.drive_for(REVERSE, 600, MM)
+        wait(250, MSEC)
+        
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(-90, DEGREES)
+
+        wait(150, MSEC)
+
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(-90, DEGREES)
+        wait(250, MSEC)
+
+        dt.drive_for(REVERSE, 800, MM)
+
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(-180, DEGREES)
+
+        wait(150, MSEC)
+
+        dt.set_turn_velocity(5, PERCENT)
+        dt.turn_to_rotation(-180, DEGREES)
+
+        wait(150, MSEC)
+
+        dt.drive_for(REVERSE, 250, MM)
+        dt.drive(REVERSE)
+        wait(500, MSEC)
+        flywheel.spin(FORWARD)
+        
+        wait(2, SECONDS)
+
+        flywheel.stop()
+        dt.stop()
     
     #dt.drive_for(REVERSE, 600, MM)
 
