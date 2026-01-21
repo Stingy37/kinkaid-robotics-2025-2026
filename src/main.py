@@ -24,40 +24,59 @@ controller_1 = Controller(PRIMARY)
 gyro = Inertial(Ports.PORT10)
 
 # Drivetrain
-leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_6_1, False)
-leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_6_1, False)
+leftDtOne = Motor(Ports.PORT11, GearSetting.RATIO_18_1, False)
+leftDtTwo = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
 left_dt = MotorGroup(leftDtOne, leftDtTwo)
 
-right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
-right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
+right_dt_one = Motor(Ports.PORT18, GearSetting.RATIO_18_1, True)
+right_dt_two = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
 right_dt = MotorGroup(right_dt_one, right_dt_two)
 
 dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
 
-# Motors
+# # Motors
 left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
 right_intake = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 intake = MotorGroup(left_intake, right_intake)
 
-flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
-conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
+# flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
+# conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
 
-# Pnuematics
-tube_dispenser = DigitalOut(brain.three_wire_port.a)
-descore = DigitalOut(brain.three_wire_port.b)
+# # Pnuematics
+# tube_dispenser = DigitalOut(brain.three_wire_port.a)
+# descore = DigitalOut(brain.three_wire_port.b)
 
 # Global Variables
 auton_side = "R"
 start_integral = 0
 start_derivative = 0
 
-isDriving = False
+# isDriving = False
 
 
 ##################################################################### END HARDWARE DEFINITIONS #######################################################
 
-def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
+def PID_drive(distance_mm, heading, velocity, kP, kI, kD):
     global start_integral, start_derivative
+    
+    #constants, currently broad placeholders
+
+    wheel_diameter = 350 #in mm
+    gear_ratio = 1.5
+
+    #calculations
+    mm_per_degree = (3.14159 * wheel_diameter) / (360 * gear_ratio)
+
+    distance_degrees = distance_mm / mm_per_degree
+
+    threshold = 0.25
+    threshold *= mm_per_degree
+
+    target_mm = distance_mm
+    current_mm = 0
+
+
+
     left_dt.set_position(0, DEGREES)
     right_dt.set_position(0, DEGREES)
 
@@ -66,31 +85,82 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
     previousError = 0
 
     if velocity >= 0:
-        while left_dt.position(DEGREES) < distance_degrees:
-            # set error
+
+        target_with_threshold = target_mm - threshold
+
+        while current_mm < target_with_threshold:
+            left_pos_degrees = left_dt.position(DEGREES)
+            right_pos_degrees = right_dt.position(DEGREES)
+
+            avg_pos_degrees = (left_pos_degrees + right_pos_degrees) / 2.0
+            current_mm = avg_pos_degrees * mm_per_degree
+
             error = heading - gyro.rotation()
 
-            # update integral
             integral += error
             integral = max(min(integral, 50), -50)
 
-            # update derivative
             derivative = error - previousError
             derivative = max(min(derivative, 50), -50)
 
-            #set velocities
             output = (kP * error) + (kI * integral) + (kD * derivative)
 
-            left_dt.set_velocity((velocity + output), units = PERCENT)
-            right_dt.set_velocity((velocity - output), units = PERCENT)
+            distance_remaining = target_mm - current_mm
+            if distance_remaining < 50:
+                slowdown_factor = distance_remaining / 50.0
+                adjusted_velocity = velocity * min(1.0, slowdown_factor)
+                left_vel = (adjusted_velocity + output)
+                right_vel = (adjusted_velocity - output)
+            else:
+                left_vel = (velocity + output)
+                right_vel = (velocity - output)
+
+            left_dt.set_velocity(left_vel, units=PERCENT)
+            right_dt.set_velocity(right_vel, units=PERCENT)
             left_dt.spin(FORWARD)
             right_dt.spin(FORWARD)
 
             previousError = error
-            wait(100, MSEC)
+            wait(20, MSEC)
+
+
+            
+
+        # while left_dt.position(DEGREES) < distance_degrees:
+        #     # set error
+        #     error = heading - gyro.rotation()
+
+        #     # update integral
+        #     integral += error
+        #     integral = max(min(integral, 50), -50)
+
+        #     # update derivative
+        #     derivative = error - previousError
+        #     derivative = max(min(derivative, 50), -50)
+
+        #     #set velocities
+        #     output = (kP * error) + (kI * integral) + (kD * derivative)
+
+        #     left_dt.set_velocity((velocity + output), units = PERCENT)
+        #     right_dt.set_velocity((velocity - output), units = PERCENT)
+        #     left_dt.spin(FORWARD)
+        #     right_dt.spin(FORWARD)
+
+        #     previousError = error
+        #     wait(100, MSEC)
 
     else:
-        while left_dt.position(DEGREES) > distance_degrees:
+
+        target_with_threshold = target_mm + threshold  # Negative target
+        
+        while current_mm > target_with_threshold:
+            # Calculate current position in mm
+            left_pos_degrees = left_dt.position(DEGREES)
+            right_pos_degrees = right_dt.position(DEGREES)
+            
+            avg_pos_degrees = (left_pos_degrees + right_pos_degrees) / 2.0
+            current_mm = avg_pos_degrees * mm_per_degree
+            
             # set error
             error = heading - gyro.rotation()
 
@@ -104,20 +174,54 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
 
             #set velocities
             output = (kP * error) + (kI * integral) + (kD * derivative)
+            
+            # Slow down as we approach target
+            distance_remaining = abs(target_mm - current_mm)
+            if distance_remaining < 50:
+                slowdown_factor = distance_remaining / 50.0
+                adjusted_velocity = velocity * min(1.0, slowdown_factor)
+                left_vel = (adjusted_velocity + output)
+                right_vel = (adjusted_velocity - output)
+            else:
+                left_vel = (velocity + output)
+                right_vel = (velocity - output)
 
-            left_dt.set_velocity((velocity + output), units = PERCENT)
-            right_dt.set_velocity((velocity - output), units = PERCENT)
+            left_dt.set_velocity(left_vel, units=PERCENT)
+            right_dt.set_velocity(right_vel, units=PERCENT)
             left_dt.spin(FORWARD)
             right_dt.spin(FORWARD)
 
             previousError = error
-
             wait(20, MSEC)
+
+        # while left_dt.position(DEGREES) > distance_degrees:
+        #     # set error
+        #     error = heading - gyro.rotation()
+
+        #     # update integral
+        #     integral += error
+        #     integral = max(min(integral, 50), -50)
+
+        #     # update derivative
+        #     derivative = error - previousError
+        #     derivative = max(min(derivative, 50), -50)
+
+        #     #set velocities
+        #     output = (kP * error) + (kI * integral) + (kD * derivative)
+
+        #     left_dt.set_velocity((velocity + output), units = PERCENT)
+        #     right_dt.set_velocity((velocity - output), units = PERCENT)
+        #     left_dt.spin(FORWARD)
+        #     right_dt.spin(FORWARD)
+
+        #     previousError = error
+
+        #     wait(20, MSEC)
+
 
     #
     left_dt.stop()
     right_dt.stop()
-
 
     
 def driver_control():
@@ -128,8 +232,8 @@ def driver_control():
     while isDriving:
         # drivetrain
         if abs(controller_1.axis3.position()) >= 5 or abs(controller_1.axis1.position()) >= 5: # deadzone
-            f_joystick = 0.5 * (float(controller_1.axis3.position()))
-            t_joystick = 0.3 * (float(controller_1.axis1.position()))
+            f_joystick = (float(controller_1.axis3.position()))
+            t_joystick = (float(controller_1.axis1.position()))
             # left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + (0.5 * float(controller_1.axis1.position()))))
             # right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - (0.5 * float(controller_1.axis1.position()))))
             left_drive_velocity = f_joystick + t_joystick
@@ -150,158 +254,158 @@ def driver_control():
         else:
             dt.stop()
 
-        # flywheel and conveyor belt
-        if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
-            flywheel.set_velocity(600)
-            conveyor.spin(FORWARD)
-            flywheel.spin(FORWARD)
-        elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
-            conveyor.spin(FORWARD)
-            flywheel.stop()
-        elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
-            flywheel.set_velocity(600)
-            conveyor.spin(REVERSE)
-            flywheel.spin(FORWARD)
-        else:
-            flywheel.set_velocity(600)
-            conveyor.set_velocity(600)
-            conveyor.stop()
-            flywheel.stop()
+    #     # flywheel and conveyor belt
+    #     if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
+    #         flywheel.set_velocity(600)
+    #         conveyor.spin(FORWARD)
+    #         flywheel.spin(FORWARD)
+    #     elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
+    #         conveyor.spin(FORWARD)
+    #         flywheel.stop()
+    #     elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
+    #         flywheel.set_velocity(600)
+    #         conveyor.spin(REVERSE)
+    #         flywheel.spin(FORWARD)
+    #     else:
+    #         flywheel.set_velocity(600)
+    #         conveyor.set_velocity(600)
+    #         conveyor.stop()
+    #         flywheel.stop()
 
-        # intake
-        if controller_1.buttonL2.pressing():
-            intake.spin(REVERSE, velocity = 600, units = RPM)
-        elif controller_1.buttonL1.pressing():
-            intake.spin(FORWARD, velocity = 600, units = RPM)
-        else:
-            intake.stop()
+    #     # intake
+    #     if controller_1.buttonL2.pressing():
+    #         intake.spin(REVERSE, velocity = 600, units = RPM)
+    #     elif controller_1.buttonL1.pressing():
+    #         intake.spin(FORWARD, velocity = 600, units = RPM)
+    #     else:
+    #         intake.stop()
         
-        # pneumatics
-        if controller_1.buttonUp.pressing():
-            tube_dispenser.set(True)
-        elif controller_1.buttonDown.pressing():
-            tube_dispenser.set(False)
+    #     # pneumatics
+    #     if controller_1.buttonUp.pressing():
+    #         tube_dispenser.set(True)
+    #     elif controller_1.buttonDown.pressing():
+    #         tube_dispenser.set(False)
         
-        if controller_1.buttonX.pressing():
-            descore.set(True)
-        elif controller_1.buttonY.pressing():
-            descore.set(False)
-    isDriving = False
+    #     if controller_1.buttonX.pressing():
+    #         descore.set(True)
+    #     elif controller_1.buttonY.pressing():
+    #         descore.set(False)
+    # isDriving = False
 
 def autonomous():
     """
     ported code
 
     """
-    if auton_side == "L":
-        dt.set_drive_velocity(25, PERCENT)
-        dt.set_turn_velocity(5, PERCENT)
-        dt.set_stopping(BRAKE)
-        intake.set_velocity(100, PERCENT)
-        intake.spin(REVERSE)
-        conveyor.set_velocity(100, PERCENT)
-        conveyor.spin(FORWARD)
-        flywheel.set_velocity(100, PERCENT)
+    # if auton_side == "L":
+    #     dt.set_drive_velocity(25, PERCENT)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.set_stopping(BRAKE)
+    #     intake.set_velocity(100, PERCENT)
+    #     intake.spin(REVERSE)
+    #     conveyor.set_velocity(100, PERCENT)
+    #     conveyor.spin(FORWARD)
+    #     flywheel.set_velocity(100, PERCENT)
 
-        #dt.drive_for(FORWARD, 1300, MM)
-        #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
+    #     #dt.drive_for(FORWARD, 1300, MM)
+    #     #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
 
-        dt.turn_to_rotation(-6)
-        wait(20, MSEC)
-        dt.drive_for(FORWARD, 1200, MM)
+    #     dt.turn_to_rotation(-6)
+    #     wait(20, MSEC)
+    #     dt.drive_for(FORWARD, 1200, MM)
 
-        wait(2, SECONDS)
+    #     wait(2, SECONDS)
 
-        dt.drive_for(REVERSE, 600, MM)
-        wait(250, MSEC)
+    #     dt.drive_for(REVERSE, 600, MM)
+    #     wait(250, MSEC)
         
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(90, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(90, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(90, DEGREES)
-        wait(250, MSEC)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(90, DEGREES)
+    #     wait(250, MSEC)
 
-        dt.drive_for(REVERSE, 800, MM)
+    #     dt.drive_for(REVERSE, 800, MM)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(180, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(180, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(180, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(180, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.drive_for(REVERSE, 250, MM)
-        dt.drive(REVERSE)
-        wait(500, MSEC)
-        flywheel.spin(FORWARD)
+    #     dt.drive_for(REVERSE, 250, MM)
+    #     dt.drive(REVERSE)
+    #     wait(500, MSEC)
+    #     flywheel.spin(FORWARD)
         
-        wait(2, SECONDS)
+    #     wait(2, SECONDS)
 
-        flywheel.stop()
-        dt.stop()
+    #     flywheel.stop()
+    #     dt.stop()
 
 
 
-    elif auton_side == "R":
-        dt.set_drive_velocity(25, PERCENT)
-        dt.set_turn_velocity(5, PERCENT)
-        dt.set_stopping(BRAKE)
-        intake.set_velocity(100, PERCENT)
-        intake.spin(REVERSE)
-        conveyor.set_velocity(100, PERCENT)
-        conveyor.spin(FORWARD)
-        flywheel.set_velocity(100, PERCENT)
+    # elif auton_side == "R":
+    #     dt.set_drive_velocity(25, PERCENT)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.set_stopping(BRAKE)
+    #     intake.set_velocity(100, PERCENT)
+    #     intake.spin(REVERSE)
+    #     conveyor.set_velocity(100, PERCENT)
+    #     conveyor.spin(FORWARD)
+    #     flywheel.set_velocity(100, PERCENT)
 
-        #dt.drive_for(FORWARD, 1300, MM)
-        #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
+    #     #dt.drive_for(FORWARD, 1300, MM)
+    #     #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
 
-        #dt.turn_to_rotation(4)
-        wait(20, MSEC)
-        dt.drive_for(FORWARD, 1200, MM)
+    #     #dt.turn_to_rotation(4)
+    #     wait(20, MSEC)
+    #     dt.drive_for(FORWARD, 1200, MM)
 
-        wait(2, SECONDS)
+    #     wait(2, SECONDS)
 
-        dt.drive_for(REVERSE, 600, MM)
-        wait(250, MSEC)
+    #     dt.drive_for(REVERSE, 600, MM)
+    #     wait(250, MSEC)
         
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(-90, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(-90, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(-90, DEGREES)
-        wait(250, MSEC)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(-90, DEGREES)
+    #     wait(250, MSEC)
 
-        dt.drive_for(REVERSE, 700, MM)
+    #     dt.drive_for(REVERSE, 700, MM)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(-180, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(-180, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
-        dt.turn_to_rotation(-180, DEGREES)
+    #     dt.set_turn_velocity(5, PERCENT)
+    #     dt.turn_to_rotation(-180, DEGREES)
 
-        wait(150, MSEC)
+    #     wait(150, MSEC)
 
-        dt.drive_for(REVERSE, 250, MM)
-        dt.drive(REVERSE)
-        wait(500, MSEC)
-        flywheel.spin(FORWARD)
+    #     dt.drive_for(REVERSE, 250, MM)
+    #     dt.drive(REVERSE)
+    #     wait(500, MSEC)
+    #     flywheel.spin(FORWARD)
         
-        wait(2, SECONDS)
+    #     wait(2, SECONDS)
 
-        flywheel.stop()
-        dt.stop()
+    #     flywheel.stop()
+    #     dt.stop()
     
-    #dt.drive_for(REVERSE, 600, MM)
+    # #dt.drive_for(REVERSE, 600, MM)
 
 
 # delegates robot behavior during competitiondti
@@ -330,9 +434,9 @@ def main():
         controller_1.screen.set_cursor(1, 1)
         controller_1.screen.print("L: " + str(leftDtOne.temperature()) + " " + str(leftDtTwo.temperature()) + " " + "R: " + str(right_dt_one.temperature()) + " " + str(right_dt_two.temperature()))
         
-        #print rpms
-        controller_1.screen.set_cursor(2, 1)
-        controller_1.screen.print("I: " + str(int(intake.velocity())) + " " + "F: " + str(int(flywheel.velocity())) +" " + "C: " + str(int(conveyor.velocity())))
+        # #print rpms
+        # controller_1.screen.set_cursor(2, 1)
+        # controller_1.screen.print("I: " + str(int(intake.velocity())) + " " + "F: " + str(int(flywheel.velocity())) +" " + "C: " + str(int(conveyor.velocity())))
         
         #drivetrain rpms
         controller_1.screen.set_cursor(3, 1)
