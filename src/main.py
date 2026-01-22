@@ -41,10 +41,11 @@ intake = MotorGroup(left_intake, right_intake)
 
 # flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
 # conveyor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)  
+lever = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
 
 # # Pnuematics
-# tube_dispenser = DigitalOut(brain.three_wire_port.a)
-# descore = DigitalOut(brain.three_wire_port.b)
+tube_dispenser = DigitalOut(brain.three_wire_port.a)
+descore = DigitalOut(brain.three_wire_port.b)
 
 # Global Variables
 auton_side = "R"
