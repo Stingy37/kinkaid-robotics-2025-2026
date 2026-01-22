@@ -471,6 +471,60 @@ def autonomous():
 
         dt.stop()
 
+    elif auton_side == 3:
+        
+        dt.set_drive_velocity(70, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
+        dt.set_stopping(BRAKE)
+        intake.set_velocity(100, PERCENT)
+        conveyor.set_velocity(100, PERCENT)
+        flywheel.set_velocity(100, PERCENT)
+
+        conveyor.spin(FORWARD)
+        intake.spin(REVERSE)
+
+        #dt.turn_to_rotation(-6)
+        #wait(20, MSEC)
+
+        #forward, 1200mm
+        PID_drive(1200, 0, 70, 1, 0.1, 0.01)
+
+        wait(2, SECONDS)
+
+        #reverse, 600mm
+        PID_drive(-600, 0, -70, 1, 0.1, 0.01)
+        wait(20, MSEC)
+
+        conveyor.set_velocity(50, PERCENT)
+
+        #turn to 90 rotation
+        dt.set_turn_velocity(20, PERCENT)
+        dt.turn_to_rotation(-90, DEGREES)
+        wait(20, MSEC)
+        dt.turn_to_rotation(-90, DEGREES)
+        wait(20, MSEC)
+
+        #reverse 800mm
+        PID_drive(-800, -90, -70, 1, 0.1, 0.01)
+        wait(20, MSEC)
+
+        # turn to 180
+        dt.turn_to_rotation(-180, DEGREES)
+        wait(20, MSEC)
+        dt.turn_to_rotation(-180, DEGREES)
+        wait(20, MSEC)
+
+        #drive backwards
+        PID_drive(-250, -180, -70, 1, 0.1, 0.01)
+        dt.drive(REVERSE, 70, PERCENT)
+        wait(250, MSEC)
+
+        flywheel.spin(FORWARD)
+        wait(2, SECONDS)
+        flywheel.stop()
+
+        dt.stop()
+
 
 
     #dt.drive_for(REVERSE, 600, MM)
