@@ -47,7 +47,17 @@ tube_dispenser = DigitalOut(brain.three_wire_port.a)
 descore = DigitalOut(brain.three_wire_port.b)
 
 # Global Variables
-auton_side = "R"
+
+'''
+Auton side explanation:
+0 is left high goal only
+1 is right high goal only
+will change as continues, we will add no enumeration, even though probably helpful. This is because we will be adding code in pairs, 0 and 1, 2 and 3, so on so forth.
+'''
+auton_side = 0 
+auton_max = 1
+
+
 start_integral = 0
 start_derivative = 0
 
@@ -193,7 +203,7 @@ def autonomous():
     ported code
 
     """
-    if auton_side == "L":
+    if auton_side == 0:
         dt.set_drive_velocity(25, PERCENT)
         dt.set_turn_velocity(5, PERCENT)
         dt.set_stopping(BRAKE)
@@ -248,7 +258,7 @@ def autonomous():
 
 
 
-    elif auton_side == "R":
+    elif auton_side == 1:
         dt.set_drive_velocity(25, PERCENT)
         dt.set_turn_velocity(5, PERCENT)
         dt.set_stopping(BRAKE)
