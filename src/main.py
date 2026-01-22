@@ -24,12 +24,12 @@ controller_1 = Controller(PRIMARY)
 gyro = Inertial(Ports.PORT10)
 
 # Drivetrain
-leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_6_1, False)
-leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_6_1, False)
+leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_18_1, False)
+leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_18_1, False)
 left_dt = MotorGroup(leftDtOne, leftDtTwo)
 
-right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
-right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
+right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
+right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
 right_dt = MotorGroup(right_dt_one, right_dt_two)
 
 dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
@@ -128,8 +128,8 @@ def driver_control():
     while isDriving:
         # drivetrain
         if abs(controller_1.axis3.position()) >= 5 or abs(controller_1.axis1.position()) >= 5: # deadzone
-            f_joystick = 0.7 * (float(controller_1.axis3.position()))
-            t_joystick = 0.3 * (float(controller_1.axis1.position()))
+            f_joystick = (float(controller_1.axis3.position()))
+            t_joystick = (float(controller_1.axis1.position()))
             # left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + (0.5 * float(controller_1.axis1.position()))))
             # right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - (0.5 * float(controller_1.axis1.position()))))
             left_drive_velocity = f_joystick + t_joystick
