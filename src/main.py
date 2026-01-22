@@ -48,7 +48,17 @@ tube_dispenser = DigitalOut(brain.three_wire_port.a)
 descore = DigitalOut(brain.three_wire_port.b)
 
 # Global Variables
-auton_side = "R"
+
+'''
+Auton side explanation:
+0 is left high goal only
+1 is right high goal only
+will change as continues, we will add no enumeration, even though probably helpful. This is because we will be adding code in pairs, 0 and 1, 2 and 3, so on so forth.
+'''
+auton_side = 0 
+auton_max = 1
+
+
 start_integral = 0
 start_derivative = 0
 
@@ -424,6 +434,29 @@ def controller_stats_update():
         controller_1.screen.set_cursor(3, 1)
         controller_1.screen.print("L: " + str(int(leftDtOne.velocity())) + " " + str(int(leftDtTwo.velocity())) + " " + "R: " + str(int(right_dt_one.velocity())) + " " + str(int(right_dt_two.velocity())))
         wait(500)
+
+def brain_screen_update():
+    global auton_side
+    while True:
+        
+        # touch response
+        if brain.screen.pressing():
+            while not brain.screen.pressing():
+                wait(5, MSEC)
+            auton_side = auton_side + 1 if auton_side < auton_max else 1
+
+        # background color updates
+        if auton_side == 0:
+            brain.screen.set_fill_color(Color.RED)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("Left")
+        elif auton_side == 1:
+            brain.screen.set_fill_color(Color.BLUE)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("Right")
+    
 
 # delegates robot behavior during competitiondti
 competition = Competition(driver_control, autonomous)
