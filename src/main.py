@@ -199,10 +199,6 @@ def driver_control():
     isDriving = False
 
 def autonomous():
-    """
-    ported code
-
-    """
     if auton_side == 0:
         dt.set_drive_velocity(25, PERCENT)
         dt.set_turn_velocity(5, PERCENT)
