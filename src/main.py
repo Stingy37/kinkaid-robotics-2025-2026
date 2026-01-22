@@ -66,8 +66,27 @@ isDriving = False
 
 ##################################################################### END HARDWARE DEFINITIONS #######################################################
 
-def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
+def PID_drive(distance_mm, heading, velocity, kP, kI, kD):
     global start_integral, start_derivative
+    
+    #constants, currently broad placeholders
+
+    wheel_diameter = 350 #in mm
+    gear_ratio = 1.5
+
+    #calculations
+    mm_per_degree = (3.14159 * wheel_diameter) / (360 * gear_ratio)
+
+    distance_degrees = distance_mm / mm_per_degree
+
+    threshold = 0.25
+    threshold *= mm_per_degree
+
+    target_mm = distance_mm
+    current_mm = 0
+
+
+
     left_dt.set_position(0, DEGREES)
     right_dt.set_position(0, DEGREES)
 
@@ -76,31 +95,82 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
     previousError = 0
 
     if velocity >= 0:
-        while left_dt.position(DEGREES) < distance_degrees:
-            # set error
+
+        target_with_threshold = target_mm - threshold
+
+        while current_mm < target_with_threshold:
+            left_pos_degrees = left_dt.position(DEGREES)
+            right_pos_degrees = right_dt.position(DEGREES)
+
+            avg_pos_degrees = (left_pos_degrees + right_pos_degrees) / 2.0
+            current_mm = avg_pos_degrees * mm_per_degree
+
             error = heading - gyro.rotation()
 
-            # update integral
             integral += error
             integral = max(min(integral, 50), -50)
 
-            # update derivative
             derivative = error - previousError
             derivative = max(min(derivative, 50), -50)
 
-            #set velocities
             output = (kP * error) + (kI * integral) + (kD * derivative)
 
-            left_dt.set_velocity((velocity + output), units = PERCENT)
-            right_dt.set_velocity((velocity - output), units = PERCENT)
+            distance_remaining = target_mm - current_mm
+            if distance_remaining < 50:
+                slowdown_factor = distance_remaining / 50.0
+                adjusted_velocity = velocity * min(1.0, slowdown_factor)
+                left_vel = (adjusted_velocity + output)
+                right_vel = (adjusted_velocity - output)
+            else:
+                left_vel = (velocity + output)
+                right_vel = (velocity - output)
+
+            left_dt.set_velocity(left_vel, units=PERCENT)
+            right_dt.set_velocity(right_vel, units=PERCENT)
             left_dt.spin(FORWARD)
             right_dt.spin(FORWARD)
 
             previousError = error
-            wait(100, MSEC)
+            wait(20, MSEC)
+
+
+            
+
+        # while left_dt.position(DEGREES) < distance_degrees:
+        #     # set error
+        #     error = heading - gyro.rotation()
+
+        #     # update integral
+        #     integral += error
+        #     integral = max(min(integral, 50), -50)
+
+        #     # update derivative
+        #     derivative = error - previousError
+        #     derivative = max(min(derivative, 50), -50)
+
+        #     #set velocities
+        #     output = (kP * error) + (kI * integral) + (kD * derivative)
+
+        #     left_dt.set_velocity((velocity + output), units = PERCENT)
+        #     right_dt.set_velocity((velocity - output), units = PERCENT)
+        #     left_dt.spin(FORWARD)
+        #     right_dt.spin(FORWARD)
+
+        #     previousError = error
+        #     wait(100, MSEC)
 
     else:
-        while left_dt.position(DEGREES) > distance_degrees:
+
+        target_with_threshold = target_mm + threshold  # Negative target
+        
+        while current_mm > target_with_threshold:
+            # Calculate current position in mm
+            left_pos_degrees = left_dt.position(DEGREES)
+            right_pos_degrees = right_dt.position(DEGREES)
+            
+            avg_pos_degrees = (left_pos_degrees + right_pos_degrees) / 2.0
+            current_mm = avg_pos_degrees * mm_per_degree
+            
             # set error
             error = heading - gyro.rotation()
 
@@ -114,20 +184,54 @@ def PID_drive(distance_degrees, heading, velocity, kP, kI, kD):
 
             #set velocities
             output = (kP * error) + (kI * integral) + (kD * derivative)
+            
+            # Slow down as we approach target
+            distance_remaining = abs(target_mm - current_mm)
+            if distance_remaining < 50:
+                slowdown_factor = distance_remaining / 50.0
+                adjusted_velocity = velocity * min(1.0, slowdown_factor)
+                left_vel = (adjusted_velocity + output)
+                right_vel = (adjusted_velocity - output)
+            else:
+                left_vel = (velocity + output)
+                right_vel = (velocity - output)
 
-            left_dt.set_velocity((velocity + output), units = PERCENT)
-            right_dt.set_velocity((velocity - output), units = PERCENT)
+            left_dt.set_velocity(left_vel, units=PERCENT)
+            right_dt.set_velocity(right_vel, units=PERCENT)
             left_dt.spin(FORWARD)
             right_dt.spin(FORWARD)
 
             previousError = error
-
             wait(20, MSEC)
+
+        # while left_dt.position(DEGREES) > distance_degrees:
+        #     # set error
+        #     error = heading - gyro.rotation()
+
+        #     # update integral
+        #     integral += error
+        #     integral = max(min(integral, 50), -50)
+
+        #     # update derivative
+        #     derivative = error - previousError
+        #     derivative = max(min(derivative, 50), -50)
+
+        #     #set velocities
+        #     output = (kP * error) + (kI * integral) + (kD * derivative)
+
+        #     left_dt.set_velocity((velocity + output), units = PERCENT)
+        #     right_dt.set_velocity((velocity - output), units = PERCENT)
+        #     left_dt.spin(FORWARD)
+        #     right_dt.spin(FORWARD)
+
+        #     previousError = error
+
+        #     wait(20, MSEC)
+
 
     #
     left_dt.stop()
     right_dt.stop()
-
 
     
 def driver_control():
