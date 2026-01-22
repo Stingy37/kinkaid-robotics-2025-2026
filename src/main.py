@@ -313,6 +313,43 @@ def autonomous():
     
     #dt.drive_for(REVERSE, 600, MM)
 
+def controller_stats_update():
+    while True:
+        #print temps
+        controller_1.screen.clear_screen()
+        controller_1.screen.set_cursor(1, 1)
+        controller_1.screen.print("L: " + str(leftDtOne.temperature()) + " " + str(leftDtTwo.temperature()) + " " + "R: " + str(right_dt_one.temperature()) + " " + str(right_dt_two.temperature()))
+        
+        #print rpms
+        controller_1.screen.set_cursor(2, 1)
+        controller_1.screen.print("I: " + str(int(intake.velocity())) + " " + "F: " + str(int(flywheel.velocity())) +" " + "C: " + str(int(conveyor.velocity())))
+        
+        #drivetrain rpms
+        controller_1.screen.set_cursor(3, 1)
+        controller_1.screen.print("L: " + str(int(leftDtOne.velocity())) + " " + str(int(leftDtTwo.velocity())) + " " + "R: " + str(int(right_dt_one.velocity())) + " " + str(int(right_dt_two.velocity())))
+        wait(500)
+
+def brain_screen_update():
+    global auton_side
+    while True:
+        
+        # touch response
+        if brain.screen.pressing():
+            while not brain.screen.pressing():
+                wait(5, MSEC)
+            auton_side = auton_side + 1 if auton_side < auton_max else 1
+
+        # background color updates
+        if auton_side == 0:
+            brain.screen.set_fill_color(Color.RED)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("Left")
+        elif auton_side == 1:
+            brain.screen.set_fill_color(Color.BLUE)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("Right")
 
 # delegates robot behavior during competitiondti
 competition = Competition(driver_control, autonomous)
@@ -332,20 +369,4 @@ def main():
 
     # timer for stuff on the UI
     timer = Timer()   
-
-    
-    while True:
-        #print temps
-        controller_1.screen.clear_screen()
-        controller_1.screen.set_cursor(1, 1)
-        controller_1.screen.print("L: " + str(leftDtOne.temperature()) + " " + str(leftDtTwo.temperature()) + " " + "R: " + str(right_dt_one.temperature()) + " " + str(right_dt_two.temperature()))
-        
-        #print rpms
-        controller_1.screen.set_cursor(2, 1)
-        controller_1.screen.print("I: " + str(int(intake.velocity())) + " " + "F: " + str(int(flywheel.velocity())) +" " + "C: " + str(int(conveyor.velocity())))
-        
-        #drivetrain rpms
-        controller_1.screen.set_cursor(3, 1)
-        controller_1.screen.print("L: " + str(int(leftDtOne.velocity())) + " " + str(int(leftDtTwo.velocity())) + " " + "R: " + str(int(right_dt_one.velocity())) + " " + str(int(right_dt_two.velocity())))
-        wait(500)
 main()
