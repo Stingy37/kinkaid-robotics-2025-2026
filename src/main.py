@@ -61,7 +61,7 @@ will change as continues, we will add no enumeration, even though probably helpf
 
 
 '''
-auton_side = 0 
+auton_side = 2  
 auton_max = 3
 
 
@@ -78,8 +78,8 @@ def PID_drive(distance_mm, heading, velocity, kP, kI, kD):
     
     #constants, currently broad placeholders
 
-    wheel_diameter = 350 #in mm
-    gear_ratio = 1.5
+    wheel_diameter = 800 #in mm
+    gear_ratio = 1
 
     #calculations
     mm_per_degree = (3.14159 * wheel_diameter) / (360 * gear_ratio)
@@ -546,12 +546,11 @@ def controller_stats_update():
         wait(500)
 
 def brain_screen_update():
-    global auton_side
+    global auton_side, auton_max
     while True:
-        
         # touch response
         if brain.screen.pressing():
-            while not brain.screen.pressing():
+            while brain.screen.pressing():
                 wait(5, MSEC)
             auton_side = auton_side + 1 if auton_side < auton_max else 1
 
@@ -566,6 +565,17 @@ def brain_screen_update():
             brain.screen.set_cursor(1, 1)
             brain.screen.clear_line()
             brain.screen.print("Right")
+        elif auton_side == 2:
+            brain.screen.set_fill_color(Color.GREEN)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("PID LEFT")
+        elif auton_side == 1:
+            brain.screen.set_fill_color(Color.GREEN)
+            brain.screen.set_cursor(1, 1)
+            brain.screen.clear_line()
+            brain.screen.print("PID RIGHT")
+        wait(5, MSEC)
 
 # delegates robot behavior during competitiondti
 competition = Competition(driver_control, autonomous)
@@ -585,4 +595,8 @@ def main():
 
     # timer for stuff on the UI
     timer = Timer()   
+
+    controller_stats_update()
+    brain_screen_update()
+
 main()
