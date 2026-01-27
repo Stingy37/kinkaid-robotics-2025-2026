@@ -28,8 +28,8 @@ leftDtOne = Motor(Ports.PORT11, GearSetting.RATIO_18_1, False)
 leftDtTwo = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
 left_dt = MotorGroup(leftDtOne, leftDtTwo)
 
-right_dt_one = Motor(Ports.PORT18, GearSetting.RATIO_18_1, True)
-right_dt_two = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
+right_dt_one = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
+right_dt_two = Motor(Ports.PORT20, GearSetting.RATIO_18_1, True)
 right_dt = MotorGroup(right_dt_one, right_dt_two)
 
 dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
