@@ -21,7 +21,7 @@ drivetrain using smartdrive instead simple drivetrain
 # Core controls 
 brain=Brain()
 controller_1 = Controller(PRIMARY)
-gyro = Inertial(Ports.PORT10)
+gyro = Inertial(Ports.PORT20)
 
 # Drivetrain
 leftDtOne = Motor(Ports.PORT11, GearSetting.RATIO_18_1, False)
@@ -35,8 +35,8 @@ right_dt = MotorGroup(right_dt_one, right_dt_two)
 dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
 
 # # Motors
-left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
-right_intake = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
+left_intake = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
+right_intake = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 intake = MotorGroup(left_intake, right_intake)
 
 # flywheel = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
@@ -247,8 +247,8 @@ def driver_control():
             t_joystick = (float(controller_1.axis1.position()))
             # left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + (0.5 * float(controller_1.axis1.position()))))
             # right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - (0.5 * float(controller_1.axis1.position()))))
-            left_drive_velocity = f_joystick + t_joystick
-            right_drive_velocity= f_joystick - t_joystick
+            left_drive_velocity = f_joystick - t_joystick
+            right_drive_velocity= f_joystick + t_joystick
 
             if left_drive_velocity > 0:
                 left_dt.set_velocity(abs(left_drive_velocity), units = PERCENT)
@@ -265,43 +265,50 @@ def driver_control():
         else:
             dt.stop()
 
-    #     # flywheel and conveyor belt
-    #     if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
-    #         flywheel.set_velocity(600)
-    #         conveyor.spin(FORWARD)
-    #         flywheel.spin(FORWARD)
-    #     elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
-    #         conveyor.spin(FORWARD)
-    #         flywheel.stop()
-    #     elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
-    #         flywheel.set_velocity(600)
-    #         conveyor.spin(REVERSE)
-    #         flywheel.spin(FORWARD)
-    #     else:
-    #         flywheel.set_velocity(600)
-    #         conveyor.set_velocity(600)
-    #         conveyor.stop()
-    #         flywheel.stop()
+        # # flywheel and conveyor belt
+        # if controller_1.buttonR1.pressing() and controller_1.buttonR2.pressing():
+        #     flywheel.set_velocity(600)
+        #     conveyor.spin(FORWARD)
+        #     flywheel.spin(FORWARD)
+        # elif controller_1.buttonR2.pressing() and not(controller_1.buttonR1.pressing()):
+        #     conveyor.spin(FORWARD)
+        #     flywheel.stop()
+        # elif controller_1.buttonR1.pressing() and not(controller_1.buttonR2.pressing()):
+        #     flywheel.set_velocity(600)
+        #     conveyor.spin(REVERSE)
+        #     flywheel.spin(FORWARD)
+        # else:
+        #     flywheel.set_velocity(600)
+        #     conveyor.set_velocity(600)
+        #     conveyor.stop()
+        #     flywheel.stop()
 
-    #     # intake
-    #     if controller_1.buttonL2.pressing():
-    #         intake.spin(REVERSE, velocity = 600, units = RPM)
-    #     elif controller_1.buttonL1.pressing():
-    #         intake.spin(FORWARD, velocity = 600, units = RPM)
-    #     else:
-    #         intake.stop()
+        if controller_1.buttonR1.pressing():
+            lever.spin(FORWARD)
+        elif controller_1.buttonR2.pressing():
+            lever.spin(REVERSE)
+        else:
+            lever.stop()
+
+        # intake
+        if controller_1.buttonL2.pressing():
+            intake.spin(REVERSE, velocity = 600, units = RPM)
+        elif controller_1.buttonL1.pressing():
+            intake.spin(FORWARD, velocity = 600, units = RPM)
+        else:
+            intake.stop()
         
-    #     # pneumatics
-    #     if controller_1.buttonUp.pressing():
-    #         tube_dispenser.set(True)
-    #     elif controller_1.buttonDown.pressing():
-    #         tube_dispenser.set(False)
+        # pneumatics
+        if controller_1.buttonUp.pressing():
+            tube_dispenser.set(True)
+        elif controller_1.buttonDown.pressing():
+            tube_dispenser.set(False)
         
-    #     if controller_1.buttonX.pressing():
-    #         descore.set(True)
-    #     elif controller_1.buttonY.pressing():
-    #         descore.set(False)
-    # isDriving = False
+        if controller_1.buttonX.pressing():
+            descore.set(True)
+        elif controller_1.buttonY.pressing():
+            descore.set(False)
+    isDriving = False
 
 def autonomous():
     """
