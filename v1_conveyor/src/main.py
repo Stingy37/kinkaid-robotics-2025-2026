@@ -24,15 +24,15 @@ controller_1 = Controller(PRIMARY)
 gyro = Inertial(Ports.PORT10)
 
 # Drivetrain
-leftDtOne = Motor(Ports.PORT19, GearSetting.RATIO_18_1, False)
-leftDtTwo = Motor(Ports.PORT20, GearSetting.RATIO_18_1, False)
+leftDtOne = Motor(Ports.PORT11, GearSetting.RATIO_18_1, False)
+leftDtTwo = Motor(Ports.PORT12, GearSetting.RATIO_18_1, False)
 left_dt = MotorGroup(leftDtOne, leftDtTwo)
 
-right_dt_one = Motor(Ports.PORT11, GearSetting.RATIO_18_1, True)
-right_dt_two = Motor(Ports.PORT12, GearSetting.RATIO_18_1, True)
+right_dt_one = Motor(Ports.PORT19, GearSetting.RATIO_18_1, True)
+right_dt_two = Motor(Ports.PORT20, GearSetting.RATIO_18_1, True)
 right_dt = MotorGroup(right_dt_one, right_dt_two)
 
-dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, units = DistanceUnits.MM)
+dt = SmartDrive(left_dt, right_dt, gyro, wheelTravel = 260, trackWidth=280, wheelBase=180, units = DistanceUnits.MM, externalGearRatio=1.66)
 
 # Motors
 left_intake = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
@@ -61,7 +61,7 @@ will change as continues, we will add no enumeration, even though probably helpf
 
 
 '''
-auton_side = 2  
+auton_side = 0
 auton_max = 3
 
 
@@ -245,16 +245,15 @@ def driver_control():
     """
     Code that runs when the user is controlling the robot 
     """
-    isDriving = True
-    while isDriving:
+    while True:
         # drivetrain
         if abs(controller_1.axis3.position()) >= 5 or abs(controller_1.axis1.position()) >= 5: # deadzone
             f_joystick = (float(controller_1.axis3.position()))
             t_joystick = (float(controller_1.axis1.position()))
             # left_drive_velocity = ((0.7 * (float(controller_1.axis3.position())) + (0.5 * float(controller_1.axis1.position()))))
             # right_drive_velocity = ((0.7 * float(controller_1.axis3.position()) - (0.5 * float(controller_1.axis1.position()))))
-            left_drive_velocity = f_joystick + t_joystick
-            right_drive_velocity= f_joystick - t_joystick
+            left_drive_velocity = f_joystick - t_joystick
+            right_drive_velocity= f_joystick + t_joystick
 
             if left_drive_velocity > 0:
                 left_dt.set_velocity(abs(left_drive_velocity), units = PERCENT)
@@ -293,7 +292,7 @@ def driver_control():
         if controller_1.buttonL2.pressing():
             intake.spin(REVERSE, velocity = 600, units = RPM)
         elif controller_1.buttonL1.pressing():
-            intake.spin(FORWARD, velocity = 600, units = RPM)
+            intake.spin(FORWARD, velocity = 300, units = RPM)
         else:
             intake.stop()
         
@@ -307,48 +306,51 @@ def driver_control():
             descore.set(True)
         elif controller_1.buttonY.pressing():
             descore.set(False)
-    isDriving = False
 
 def autonomous():
     if auton_side == 0:
-        dt.set_drive_velocity(25, PERCENT)
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_drive_velocity(60, PERCENT)
+        dt.set_turn_velocity(30, PERCENT)
         dt.set_stopping(BRAKE)
         intake.set_velocity(100, PERCENT)
         intake.spin(REVERSE)
         conveyor.set_velocity(100, PERCENT)
         conveyor.spin(FORWARD)
         flywheel.set_velocity(100, PERCENT)
+        flywheel.stop(BRAKE)
 
         #dt.drive_for(FORWARD, 1300, MM)
         #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
 
-        dt.turn_to_rotation(-6)
+        dt.turn_to_rotation(-7, DEGREES)
         wait(20, MSEC)
-        dt.drive_for(FORWARD, 1200, MM)
+        dt.drive_for(FORWARD, 1000, MM)
 
-        wait(2, SECONDS)
+        wait(1.5, SECONDS)
+
+        intake.stop()
+        conveyor.stop()
 
         dt.drive_for(REVERSE, 600, MM)
         wait(250, MSEC)
         
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(30, PERCENT)
         dt.turn_to_rotation(90, DEGREES)
 
         wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(90, DEGREES)
         wait(250, MSEC)
 
         dt.drive_for(REVERSE, 800, MM)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(180, DEGREES)
 
-        wait(150, MSEC)
+        wait(100, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(180, DEGREES)
 
         wait(150, MSEC)
@@ -356,54 +358,57 @@ def autonomous():
         dt.drive_for(REVERSE, 250, MM)
         dt.drive(REVERSE)
         wait(500, MSEC)
+        dt.stop()
         flywheel.spin(FORWARD)
         
         wait(2, SECONDS)
 
         flywheel.stop()
-        dt.stop()
 
 
 
     elif auton_side == 1:
-        dt.set_drive_velocity(25, PERCENT)
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_drive_velocity(60, PERCENT)
+        dt.set_turn_velocity(30, PERCENT)
         dt.set_stopping(BRAKE)
         intake.set_velocity(100, PERCENT)
         intake.spin(REVERSE)
         conveyor.set_velocity(100, PERCENT)
         conveyor.spin(FORWARD)
         flywheel.set_velocity(100, PERCENT)
+        flywheel.stop(BRAKE)
 
         #dt.drive_for(FORWARD, 1300, MM)
         #PID_drive(1100, -4, 25, 0.2, 0.01, 0.01)
 
         #dt.turn_to_rotation(4)
-        wait(20, MSEC)
-        dt.drive_for(FORWARD, 1200, MM)
 
-        wait(2, SECONDS)
+        dt.turn_to_rotation(7, DEGREES)
+        wait(20, MSEC)
+        dt.drive_for(FORWARD, 1000, MM)
+
+        wait(1.5, SECONDS)
 
         dt.drive_for(REVERSE, 600, MM)
         wait(250, MSEC)
         
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(30, PERCENT)
         dt.turn_to_rotation(-90, DEGREES)
 
         wait(150, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(-90, DEGREES)
         wait(250, MSEC)
 
-        dt.drive_for(REVERSE, 700, MM)
+        dt.drive_for(REVERSE, 800, MM)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(-180, DEGREES)
 
-        wait(150, MSEC)
+        wait(100, MSEC)
 
-        dt.set_turn_velocity(5, PERCENT)
+        dt.set_turn_velocity(20, PERCENT)
         dt.turn_to_rotation(-180, DEGREES)
 
         wait(150, MSEC)
@@ -411,12 +416,12 @@ def autonomous():
         dt.drive_for(REVERSE, 250, MM)
         dt.drive(REVERSE)
         wait(500, MSEC)
+        dt.stop()
         flywheel.spin(FORWARD)
         
         wait(2, SECONDS)
 
         flywheel.stop()
-        dt.stop()
     
     elif auton_side == 2:
 
